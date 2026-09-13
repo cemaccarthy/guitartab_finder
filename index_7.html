@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a1f44">
+    <meta name="format-detection" content="telephone=no">
+    <title>Chord Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0a1f44;
+            --navy-light: #1a3a6e;
+            --navy-dark: #061530;
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --green: #10b981;
+            --green-dark: #059669;
+            --red: #ef4444;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-400: #9ca3af;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+            --sat: env(safe-area-inset-top);
+            --sab: env(safe-area-inset-bottom);
+            --sal: env(safe-area-inset-left);
+            --sar: env(safe-area-inset-right);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-drag: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: auto;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            line-height: 1.5;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Prevent text selection even on input-like elements that aren't actually inputs */
+        input, textarea, select {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            border-bottom: 3px solid var(--navy);
+            padding: 15px 25px;
+            padding-top: calc(15px + var(--sat));
+            padding-left: calc(25px + var(--sal));
+            padding-right: calc(25px + var(--sar));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--navy);
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: var(--white);
+            border: 2px solid var(--navy);
+            color: var(--navy);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            font-family: 'Space Mono', monospace;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .icon-btn:hover {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .icon-btn.active {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        /* Main content area - scrollable */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            padding-bottom: var(--sab);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 25px 20px;
+            padding-left: calc(20px + var(--sal));
+            padding-right: calc(20px + var(--sar));
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Sections */
+        .section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--navy);
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: 2px solid var(--gray-200);
+            background: var(--white);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--gray-800);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .btn:hover:not(.disabled):not(.active) {
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .btn.active {
+            background: var(--blue);
+            color: var(--white);
+            border-color: var(--blue);
+        }
+
+        .btn.disabled {
+            background: var(--gray-100);
+            color: var(--gray-400);
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+            border-color: var(--gray-200);
+        }
+
+        .hidden { display: none; }
+
+        #show-chord-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--navy);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+            font-family: 'Space Mono', monospace;
+        }
+
+        #show-chord-btn:hover { background: var(--navy-light); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(10, 31, 68, 0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: var(--sat) var(--sar) var(--sab) var(--sal);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 30px;
+            padding-top: calc(30px + var(--sat));
+            padding-bottom: calc(30px + var(--sab));
+            border-radius: 16px;
+            width: 90%;
+            max-width: 550px;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            text-align: center;
+            max-height: calc(100vh - var(--sat) - var(--sab) - 40px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: calc(15px + var(--sat));
+            right: 15px;
+            background: var(--red);
+            color: var(--white);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .close-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--white);
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .chord-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--navy);
+            padding-right: 40px;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .tab-display {
+            background: var(--navy-dark);
+            color: var(--green);
+            font-family: 'Space Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            line-height: 1.8;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .tuning-info {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            font-style: italic;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .action-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .play-btn {
+            background: var(--green);
+            color: var(--white);
+        }
+
+        .play-btn:hover { background: var(--green-dark); }
+        .play-btn svg { fill: var(--white); }
+
+        .star-btn {
+            background: var(--white);
+            color: var(--navy);
+            border: 2px solid var(--navy);
+        }
+
+        .star-btn:hover { background: var(--gray-100); }
+        .star-btn svg { fill: var(--navy); stroke: var(--navy); }
+
+        .star-btn.saved {
+            background: #fbbf24;
+            color: var(--white);
+            border-color: #fbbf24;
+        }
+
+        .star-btn.saved svg { fill: var(--white); stroke: var(--white); }
+
+        /* Settings */
+        .tuning-option {
+            padding: 12px 15px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .tuning-option:hover { border-color: var(--blue); }
+
+        .tuning-option.active {
+            background: var(--navy);
+            color: var(--white);
+            border-color: var(--navy);
+        }
+
+        .tuning-name { font-weight: 700; }
+        .tuning-notes {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Favorites Page */
+        .favorites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .favorites-header h2 {
+            color: var(--navy);
+            font-size: 1.8rem;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .tuning-section {
+            margin-bottom: 30px;
+        }
+
+        .tuning-section-header {
+            background: var(--navy);
+            color: var(--white);
+            padding: 12px 18px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'Space Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tuning-section-header svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--green);
+        }
+
+        .tuning-section-content {
+            background: var(--white);
+            border-radius: 0 0 8px 8px;
+            padding: 15px;
+            border: 2px solid var(--navy);
+            border-top: none;
+        }
+
+        .favorite-card {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .favorite-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .favorite-info { flex: 1; min-width: 0; }
+
+        .favorite-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 8px;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .favorite-tab {
+            background: var(--navy-dark);
+            color: var(--green);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            padding: 10px;
+            border-radius: 6px;
+            white-space: pre;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .favorite-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .small-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: 'Space Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .small-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .small-btn.play {
+            background: var(--green);
+            color: var(--white);
+        }
+        .small-btn.play svg { fill: var(--white); }
+
+        .small-btn.delete {
+            background: var(--red);
+            color: var(--white);
+        }
+        .small-btn.delete svg { stroke: var(--white); fill: none; stroke-width: 3; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-600);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            opacity: 0.4;
+            fill: var(--navy);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: calc(30px + var(--sab));
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--navy);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            z-index: 2000;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-family: 'Space Mono', monospace;
+            max-width: calc(100% - 40px);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .header { flex-wrap: wrap; gap: 10px; padding: 12px; padding-top: calc(12px + var(--sat)); padding-left: calc(12px + var(--sal)); padding-right: calc(12px + var(--sar)); }
+            .logo h1 { font-size: 1.4rem; }
+            .icon-btn { padding: 6px 10px; font-size: 0.85rem; }
+            .icon-btn svg { width: 16px; height: 16px; }
+            .favorite-card { flex-direction: column; align-items: stretch; }
+            .favorite-actions { flex-direction: row; }
+            .container { padding: 15px; padding-left: calc(15px + var(--sal)); padding-right: calc(15px + var(--sar)); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <div class="logo">
+        <h1>Chord Finder</h1>
+    </div>
+    <div class="header-actions">
+        <button class="icon-btn" id="nav-find" title="Find Chord">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            Find
+        </button>
+        <button class="icon-btn" id="nav-favs" title="Favourites">
+            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            Favourites
+        </button>
+        <button class="icon-btn" id="settings-btn" title="Settings">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94 0 .31.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            Settings
+        </button>
+    </div>
+</header>
+
+<!-- Main scrollable content -->
+<div class="main-content">
+
+    <!-- Page 1: Chord Finder -->
+    <div class="page active" id="page-find">
+        <div class="container">
+            <div class="section">
+                <div class="section-title">1. Root Note</div>
+                <div class="btn-group" id="root-notes">
+                    <button class="btn" data-val="A">A</button>
+                    <button class="btn" data-val="B">B</button>
+                    <button class="btn" data-val="C">C</button>
+                    <button class="btn" data-val="D">D</button>
+                    <button class="btn" data-val="E">E</button>
+                    <button class="btn" data-val="F">F</button>
+                    <button class="btn" data-val="G">G</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">2. Sharp / Flat</div>
+                <div class="btn-group" id="acc-buttons">
+                    <button class="btn active" data-val="">Natural</button>
+                    <button class="btn" data-val="#">Sharp (#)</button>
+                    <button class="btn" data-val="b">Flat (b)</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">3. Chord Quality</div>
+                <div class="btn-group" id="qualities">
+                    <button class="btn active" data-val="major">Major</button>
+                    <button class="btn" data-val="minor">Minor</button>
+                    <button class="btn" data-val="diminished">Diminished</button>
+                    <button class="btn" data-val="augmented">Augmented</button>
+                    <button class="btn" data-val="sus2">Sus2</button>
+                    <button class="btn" data-val="sus4">Sus4</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">4. Extensions</div>
+                <div class="btn-group" id="extensions">
+                    <button class="btn active" data-val="none">None</button>
+                    <button class="btn" data-val="7">7</button>
+                    <button class="btn" data-val="maj7">Maj7</button>
+                    <button class="btn" data-val="9">9</button>
+                    <button class="btn" data-val="11">11</button>
+                    <button class="btn" data-val="13">13</button>
+                    <button class="btn" data-val="6">6</button>
+                    <button class="btn" data-val="add9">Add9</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">5. Root Position (Inversion)</div>
+                <div class="btn-group" id="inversions">
+                    <button class="btn active" data-val="root" id="inv-root">Root</button>
+                    <button class="btn" data-val="1st" id="inv-1">1st Inversion</button>
+                    <button class="btn" data-val="2nd" id="inv-2">2nd Inversion</button>
+                    <button class="btn disabled" data-val="3rd" id="inv-3">3rd Inversion</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">6. Fret Position</div>
+                <div class="btn-group" id="frets">
+                    <button class="btn active" data-val="0">Open</button>
+                    <button class="btn" data-val="1">1st</button>
+                    <button class="btn" data-val="2">2nd</button>
+                    <button class="btn" data-val="3">3rd</button>
+                    <button class="btn" data-val="4">4th</button>
+                    <button class="btn" data-val="5">5th</button>
+                    <button class="btn" data-val="7">7th</button>
+                    <button class="btn" data-val="9">9th</button>
+                    <button class="btn" data-val="12">12th</button>
+                </div>
+            </div>
+
+            <button id="show-chord-btn">Show Chord</button>
+        </div>
+    </div>
+
+    <!-- Page 2: Favourites -->
+    <div class="page" id="page-favs">
+        <div class="container">
+            <div class="favorites-header">
+                <h2>Your Favourite Chords</h2>
+            </div>
+            <div id="favorites-list"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chord Modal -->
+<div class="modal-overlay" id="chord-modal">
+    <div class="modal-content">
+        <button class="close-btn" id="close-chord" title="Close">
+            <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <h2 class="chord-title" id="chord-name">C Major</h2>
+        <div class="tab-display" id="tab-output"></div>
+        <div class="tuning-info" id="tuning-display">Standard Tuning: E A D G B e</div>
+        <div class="modal-actions">
+            <button class="action-btn play-btn" id="play-chord-btn">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                Play Arpeggio
+            </button>
+            <button class="action-btn star-btn" id="save-fav-btn">
+                <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                Save to Favourites
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal-content">
+        <button class="close-btn" id="close-settings" title="Close">
+            <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <h2 class="chord-title" style="padding-right: 40px;">Tuning Settings</h2>
+        <p style="margin-bottom: 20px; color: var(--gray-600); font-family: 'Space Mono', monospace;">Select a tuning. Chord shapes will adjust automatically.</p>
+        <div id="tuning-list"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // --- TUNINGS ---
+    const tunings = {
+        'standard':     { name: 'Standard',       notes: ['E','A','D','G','B','e'],   pcs: [4, 9, 2, 7, 11, 4] },
+        'dropD':        { name: 'Drop D',         notes: ['D','A','D','G','B','e'],   pcs: [2, 9, 2, 7, 11, 4] },
+        'dropC':        { name: 'Drop C',         notes: ['C','G','C','F','A','d'],   pcs: [0, 7, 0, 5, 9, 2] },
+        'dadgad':       { name: 'DADGAD',         notes: ['D','A','D','G','A','d'],   pcs: [2, 9, 2, 7, 9, 2] },
+        'openG':        { name: 'Open G',         notes: ['D','G','D','G','B','d'],   pcs: [2, 7, 2, 7, 11, 2] },
+        'openD':        { name: 'Open D',         notes: ['D','A','D','F#','A','d'],  pcs: [2, 9, 2, 6, 9, 2] },
+        'openE':        { name: 'Open E',         notes: ['E','B','E','G#','B','e'],  pcs: [4, 11, 4, 8, 11, 4] },
+        'openA':        { name: 'Open A',         notes: ['E','A','E','A','C#','e'],  pcs: [4, 9, 4, 9, 1, 4] },
+        'halfStepDown': { name: 'Half-Step Down', notes: ['Eb','Ab','Db','Gb','Bb','eb'], pcs: [3, 8, 1, 6, 10, 3] },
+        'openC':        { name: 'Open C',         notes: ['C','G','C','G','C','e'],   pcs: [0, 7, 0, 7, 0, 4] }
+    };
+
+    // --- STATE ---
+    const state = {
+        root: null,
+        acc: '',
+        quality: 'major',
+        extension: 'none',
+        inversion: 'root',
+        fret: '0',
+        tuning: 'standard'
+    };
+
+    // --- MUSIC THEORY ---
+    const noteMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+    const qualities = {
+        'major': [0, 4, 7],
+        'minor': [0, 3, 7],
+        'diminished': [0, 3, 6],
+        'augmented': [0, 4, 8],
+        'sus2': [0, 2, 7],
+        'sus4': [0, 5, 7]
+    };
+    const extensions = {
+        'none': [],
+        '7': [10],
+        'maj7': [11],
+        '9': [10, 14],
+        '11': [10, 14, 17],
+        '13': [10, 14, 21],
+        '6': [9],
+        'add9': [14]
+    };
+
+    // --- AUDIO ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playClickSound() {
+        try {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            const bufferSize = ctx.sampleRate * 0.03;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 4);
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 2500;
+            filter.Q.value = 1.5;
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            noise.start(now);
+            noise.stop(now + 0.05);
+        } catch (e) {}
+    }
+
+    function fretToFrequency(fret, stringIndex) {
+        const openPcs = tunings[state.tuning].pcs;
+        const baseMidi = [40, 45, 50, 55, 59, 64];
+        const standardPcs = [4, 9, 2, 7, 11, 4];
+        const adjustedBase = baseMidi.map((m, i) => m + (openPcs[i] - standardPcs[i]));
+        const midi = adjustedBase[stringIndex] + fret;
+        return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function playNote(freq, startTime, duration) {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        filter.type = 'lowpass';
+        filter.frequency.value = freq * 4;
+        filter.Q.value = 2;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+    }
+
+    function playArpeggio(frets, tuningKey) {
+        const ctx = getAudioContext();
+        const savedTuning = state.tuning;
+        state.tuning = tuningKey || state.tuning;
+        const now = ctx.currentTime;
+        const delay = 0.12;
+        const duration = 1.2;
+        let noteIndex = 0;
+        for (let i = 0; i < 6; i++) {
+            if (frets[i] !== -1) {
+                const freq = fretToFrequency(frets[i], i);
+                playNote(freq, now + noteIndex * delay, duration);
+                noteIndex++;
+            }
+        }
+        state.tuning = savedTuning;
+    }
+
+    // --- TAB CALCULATION ---
+    function calculateTab() {
+        let rootPc = noteMap[state.root];
+        if (state.acc === '#') rootPc = (rootPc + 1) % 12;
+        if (state.acc === 'b') rootPc = (rootPc + 11) % 12;
+        const intervals = [...qualities[state.quality], ...extensions[state.extension]];
+        const targetPcs = [...new Set(intervals.map(i => (rootPc + i) % 12))];
+        let bassInterval = 0;
+        if (state.inversion === '1st') bassInterval = intervals[1] || 0;
+        if (state.inversion === '2nd') bassInterval = intervals[2] || 0;
+        if (state.inversion === '3rd') bassInterval = intervals[3] || 0;
+        const bassPc = (rootPc + bassInterval) % 12;
+        const openStrings = tunings[state.tuning].pcs;
+        const minFret = parseInt(state.fret);
+        const maxFret = minFret + 12;
+        const stringOptions = openStrings.map(openPc => {
+            const opts = [];
+            for (let f = minFret; f <= maxFret; f++) {
+                const notePc = (openPc + f) % 12;
+                if (targetPcs.includes(notePc)) {
+                    opts.push({ fret: f, isBass: notePc === bassPc });
+                }
+            }
+            return opts;
+        });
+        let bassString = -1;
+        let bassFret = -1;
+        for (let s = 0; s < 3; s++) {
+            const opt = stringOptions[s].find(o => o.isBass);
+            if (opt) { bassString = s; bassFret = opt.fret; break; }
+        }
+        if (bassString === -1 && stringOptions[0].length > 0) {
+            bassString = 0;
+            bassFret = stringOptions[0][0].fret;
+        }
+        const tab = [-1, -1, -1, -1, -1, -1];
+        if (bassString !== -1) tab[bassString] = bassFret;
+        for (let s = 0; s < 6; s++) {
+            if (s === bassString) continue;
+            let bestFret = -1;
+            let minDiff = 99;
+            for (const opt of stringOptions[s]) {
+                const diff = Math.abs(opt.fret - bassFret);
+                if (diff <= 4 && diff < minDiff) {
+                    minDiff = diff;
+                    bestFret = opt.fret;
+                }
+            }
+            if (bestFret === -1 && stringOptions[s].length > 0) {
+                bestFret = stringOptions[s][0].fret;
+            }
+            tab[s] = bestFret;
+        }
+        return tab;
+    }
+
+    function formatTab(tab) {
+        const strings = tunings[state.tuning].notes;
+        const displayStrings = [strings[5], strings[4], strings[3], strings[2], strings[1], strings[0]];
+        const lines = displayStrings.map((s, i) => {
+            const val = tab[5 - i];
+            const str = val === -1 ? 'x' : val.toString();
+            const padding = str.length > 1 ? '-' : '--';
+            return `${s}|-${str}${padding}`;
+        });
+        return lines.join('\n');
+    }
+
+    // --- UI SETUP ---
+    function setupButtons(containerId, stateKey, callback) {
+        const container = document.getElementById(containerId);
+        container.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('disabled')) return;
+                playClickSound();
+                container.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state[stateKey] = btn.dataset.val;
+                if (callback) callback();
+            });
+        });
+    }
+
+    setupButtons('root-notes', 'root');
+    setupButtons('acc-buttons', 'acc');
+    setupButtons('qualities', 'quality', updateInversions);
+    setupButtons('extensions', 'extension', updateInversions);
+    setupButtons('inversions', 'inversion');
+    setupButtons('frets', 'fret');
+
+    document.getElementById('show-chord-btn').addEventListener('click', () => {
+        playClickSound();
+    });
+
+    function updateInversions() {
+        const has7th = ['7', 'maj7', '9', '11', '13'].includes(state.extension);
+        const has3rd = !['sus2', 'sus4'].includes(state.quality);
+        toggleDisabled(document.getElementById('inv-1'), !has3rd);
+        toggleDisabled(document.getElementById('inv-2'), false);
+        toggleDisabled(document.getElementById('inv-3'), !has7th);
+        if (state.inversion === '1st' && !has3rd) selectDefault('inversions', 'root', 'inversion');
+        if (state.inversion === '3rd' && !has7th) selectDefault('inversions', 'root', 'inversion');
+    }
+
+    function toggleDisabled(btn, isDisabled) {
+        if (isDisabled) {
+            btn.classList.add('disabled');
+            btn.classList.remove('active');
+        } else {
+            btn.classList.remove('disabled');
+        }
+    }
+
+    function selectDefault(containerId, val, stateKey) {
+        const container = document.getElementById(containerId);
+        container.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        const defaultBtn = container.querySelector(`[data-val="${val}"]`);
+        if (defaultBtn && !defaultBtn.classList.contains('disabled')) {
+            defaultBtn.classList.add('active');
+            state[stateKey] = val;
+        }
+    }
+
+    // --- NAVIGATION ---
+    const pageFind = document.getElementById('page-find');
+    const pageFavs = document.getElementById('page-favs');
+    const navFind = document.getElementById('nav-find');
+    const navFavs = document.getElementById('nav-favs');
+
+    function showPage(page) {
+        playClickSound();
+        pageFind.classList.remove('active');
+        pageFavs.classList.remove('active');
+        navFind.classList.remove('active');
+        navFavs.classList.remove('active');
+        if (page === 'find') {
+            pageFind.classList.add('active');
+            navFind.classList.add('active');
+        } else {
+            pageFavs.classList.add('active');
+            navFavs.classList.add('active');
+            renderFavorites();
+        }
+        // Scroll to top when switching pages
+        document.querySelector('.main-content').scrollTop = 0;
+    }
+
+    navFind.addEventListener('click', () => showPage('find'));
+    navFavs.addEventListener('click', () => showPage('favs'));
+
+    // --- SETTINGS ---
+    const settingsModal = document.getElementById('settings-modal');
+    const tuningList = document.getElementById('tuning-list');
+
+    function renderTunings() {
+        tuningList.innerHTML = '';
+        Object.keys(tunings).forEach(key => {
+            const t = tunings[key];
+            const div = document.createElement('div');
+            div.className = 'tuning-option' + (state.tuning === key ? ' active' : '');
+            div.innerHTML = `
+                <div class="tuning-name">${t.name}</div>
+                <div class="tuning-notes">${t.notes.join(' ')}</div>
+            `;
+            div.addEventListener('click', () => {
+                playClickSound();
+                state.tuning = key;
+                renderTunings();
+                showToast(`Tuning changed to ${t.name}`);
+            });
+            tuningList.appendChild(div);
+        });
+    }
+
+    document.getElementById('settings-btn').addEventListener('click', () => {
+        playClickSound();
+        renderTunings();
+        settingsModal.classList.add('active');
+    });
+
+    document.getElementById('close-settings').addEventListener('click', () => {
+        playClickSound();
+        settingsModal.classList.remove('active');
+    });
+
+    // --- CHORD MODAL ---
+    const chordModal = document.getElementById('chord-modal');
+    const chordNameEl = document.getElementById('chord-name');
+    const tabOutputEl = document.getElementById('tab-output');
+    const tuningDisplayEl = document.getElementById('tuning-display');
+    const saveFavBtn = document.getElementById('save-fav-btn');
+
+    let currentChordData = null;
+
+    document.getElementById('show-chord-btn').addEventListener('click', () => {
+        if (!state.root) {
+            alert('Please select a root note!');
+            return;
+        }
+        let name = state.root + state.acc;
+        if (state.quality !== 'major') {
+            name += state.quality === 'diminished' ? 'dim' : state.quality;
+        }
+        if (state.extension !== 'none') name += state.extension;
+        if (state.inversion !== 'root') name += ` (${state.inversion} inv)`;
+        const tuning = tunings[state.tuning];
+        const tab = calculateTab();
+        chordNameEl.textContent = name;
+        tabOutputEl.textContent = formatTab(tab);
+        tuningDisplayEl.textContent = `${tuning.name} Tuning: ${tuning.notes.join(' ')}`;
+        currentChordData = {
+            name,
+            tab: formatTab(tab),
+            frets: tab,
+            tuning: state.tuning,
+            tuningName: tuning.name,
+            timestamp: Date.now()
+        };
+        const favs = getFavorites();
+        const isSaved = favs.some(f => f.name === name && f.tuning === state.tuning);
+        updateStarButton(isSaved);
+        chordModal.classList.add('active');
+    });
+
+    function updateStarButton(isSaved) {
+        if (isSaved) {
+            saveFavBtn.classList.add('saved');
+            saveFavBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> Saved!';
+        } else {
+            saveFavBtn.classList.remove('saved');
+            saveFavBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> Save to Favourites';
+        }
+    }
+
+    saveFavBtn.addEventListener('click', () => {
+        playClickSound();
+        if (!currentChordData) return;
+        const favs = getFavorites();
+        const exists = favs.some(f => f.name === currentChordData.name && f.tuning === currentChordData.tuning);
+        if (exists) {
+            const newFavs = favs.filter(f => !(f.name === currentChordData.name && f.tuning === currentChordData.tuning));
+            saveFavorites(newFavs);
+            updateStarButton(false);
+            showToast('Removed from favourites');
+        } else {
+            favs.push(currentChordData);
+            saveFavorites(favs);
+            updateStarButton(true);
+            showToast('Added to favourites!');
+        }
+    });
+
+    function resetApp() {
+        chordModal.classList.remove('active');
+        currentChordData = null;
+        state.root = null;
+        state.acc = '';
+        state.quality = 'major';
+        state.extension = 'none';
+        state.inversion = 'root';
+        state.fret = '0';
+        document.querySelectorAll('#root-notes .btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#acc-buttons .btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#acc-buttons [data-val=""]').classList.add('active');
+        document.querySelectorAll('#qualities .btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#qualities [data-val="major"]').classList.add('active');
+        document.querySelectorAll('#extensions .btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#extensions [data-val="none"]').classList.add('active');
+        document.querySelectorAll('#inversions .btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#inversions [data-val="root"]').classList.add('active');
+        document.querySelectorAll('#frets .btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#frets [data-val="0"]').classList.add('active');
+        updateInversions();
+        playClickSound();
+    }
+
+    document.getElementById('close-chord').addEventListener('click', resetApp);
+    document.querySelector('#chord-modal .modal-content').addEventListener('click', e => e.stopPropagation());
+    chordModal.addEventListener('click', e => {
+        if (e.target === chordModal) resetApp();
+    });
+
+    // --- FAVOURITES STORAGE ---
+    function getFavorites() {
+        try { return JSON.parse(localStorage.getItem('chordFavorites') || '[]'); }
+        catch { return []; }
+    }
+
+    function saveFavorites(favs) {
+        localStorage.setItem('chordFavorites', JSON.stringify(favs));
+    }
+
+    function renderFavorites() {
+        const list = document.getElementById('favorites-list');
+        const favs = getFavorites();
+        
+        if (favs.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <h3>No favourites yet</h3>
+                    <p>Find a chord and tap the star to save it here!</p>
+                </div>
+            `;
+            return;
+        }
+
+        const grouped = {};
+        favs.forEach(fav => {
+            if (!grouped[fav.tuning]) {
+                grouped[fav.tuning] = {
+                    name: fav.tuningName,
+                    chords: []
+                };
+            }
+            grouped[fav.tuning].chords.push(fav);
+        });
+
+        list.innerHTML = '';
+        
+        Object.keys(grouped).forEach(tuningKey => {
+            const group = grouped[tuningKey];
+            const section = document.createElement('div');
+            section.className = 'tuning-section';
+            
+            section.innerHTML = `
+                <div class="tuning-section-header">
+                    <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    ${group.name} Tuning
+                </div>
+                <div class="tuning-section-content" id="section-${tuningKey}"></div>
+            `;
+            list.appendChild(section);
+            
+            const content = section.querySelector('.tuning-section-content');
+            
+            group.chords.forEach((fav, idx) => {
+                const globalIdx = favs.indexOf(fav);
+                const card = document.createElement('div');
+                card.className = 'favorite-card';
+                card.innerHTML = `
+                    <div class="favorite-info">
+                        <div class="favorite-name">${fav.name}</div>
+                        <div class="favorite-tab">${fav.tab}</div>
+                    </div>
+                    <div class="favorite-actions">
+                        <button class="small-btn play" data-idx="${globalIdx}">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Play
+                        </button>
+                        <button class="small-btn delete" data-idx="${globalIdx}">
+                            <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                content.appendChild(card);
+            });
+        });
+
+        list.querySelectorAll('.play').forEach(btn => {
+            btn.addEventListener('click', () => {
+                playClickSound();
+                const idx = parseInt(btn.dataset.idx);
+                playArpeggio(favs[idx].frets, favs[idx].tuning);
+            });
+        });
+
+        list.querySelectorAll('.delete').forEach(btn => {
+            btn.addEventListener('click', () => {
+                playClickSound();
+                const idx = parseInt(btn.dataset.idx);
+                const newFavs = favs.filter((_, i) => i !== idx);
+                saveFavorites(newFavs);
+                renderFavorites();
+                showToast('Removed from favourites');
+            });
+        });
+    }
+
+    document.getElementById('play-chord-btn').addEventListener('click', () => {
+        if (!currentChordData) return;
+        playArpeggio(currentChordData.frets, currentChordData.tuning);
+    });
+
+    // --- TOAST ---
+    const toast = document.getElementById('toast');
+    let toastTimeout;
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // --- PREVENT iOS GESTURES ---
+    // Prevent pinch zoom
+    document.addEventListener('gesturestart', e => e.preventDefault());
+    document.addEventListener('gesturechange', e => e.preventDefault());
+    document.addEventListener('gestureend', e => e.preventDefault());
+    
+    // Prevent double-tap zoom
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', e => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
+
+    // --- INIT ---
+    updateInversions();
+</script>
+
+</body>
+</html>
